@@ -27,8 +27,14 @@ wavesurfer.on('seek', function (progress) {
     console.log("seeked to " + progress);
 });
 
-wavesurfer.on("region-created", function () {
+wavesurfer.on('region-created',function(r){
+   //refreshRegionLabels(r);
+});
+
+wavesurfer.on("region-update-end", function (r) {
     //wavesurfer.disableDragSelection();
+    drawRegionOnlyWave();    
+    refreshRegionLabels(r);
 });
 
 //wavesurfer.on('audioprocess', function (time) {
@@ -101,4 +107,42 @@ stopEditRegions = function () {
     document.getElementById("editButtons").style.display = "none";
 };
 
+drawRegionOnlyWave = function(){
+    let wcanvas = wavesurfer.drawer.canvases["0"].wave;
+    document.getElementById("regionWave").innerHTML="";
+    for(var r in wavesurfer.regions.list){
+        if(wavesurfer.regions.list.hasOwnProperty(r)){
+            console.dir(r);
+            let rgn = wavesurfer.regions.list[r];
+            console.dir(rgn);
+            let x = rgn.element.style.left.replace('px','');
+            let regionDrawBuffer = document.createElement("canvas");
+            regionDrawBuffer.width = rgn.element.style.width.replace('px','');
+            regionDrawBuffer.height = wcanvas.height;
+            let rctx = regionDrawBuffer.getContext('2d');
+            rctx.drawImage(wcanvas,x,0,regionDrawBuffer.width,regionDrawBuffer.height,
+                            0,0,regionDrawBuffer.width,regionDrawBuffer.height);
+            document.getElementById("regionWave").appendChild(regionDrawBuffer);
+        }
+    }
+};
 
+
+refreshRegionLabels = function(region){
+    console.dir(region);    
+    let label = null;
+    let addLabel = false;
+    for(var i = 0; i < region.element.childNodes.length; i++ ){
+        if(region.element.childNodes[i].nodeName === "LABEL"){
+            label = region.element.childNodes[i];
+        }
+    }
+    if(label === null){
+        label = document.createElement("label");
+        addLabel = true;
+    }
+    label.innerHTML = region.id;
+    if(addLabel){
+        region.element.appendChild(label);
+    }
+};
